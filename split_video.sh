@@ -1,1 +1,1 @@
-ffmpeg -hide_banner -i input.mp4 -vn -af "silencedetect=n=-30dB:d=0.5" -f null - 2>&1 | grep "silence_end" 2>&1 | awk '{print $8-$5,$8}'
+ffmpeg -hide_banner -i input.mp4 -vn -af "silencedetect=n=-30dB:d=0.5" -f null - |& awk '/silence_end/ {print $5-$8,$5}' | grep "[0-9] [0-9]" | tac
