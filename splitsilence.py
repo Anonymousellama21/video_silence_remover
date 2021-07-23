@@ -19,12 +19,12 @@ splits_path = os.path.splitext(input_file)[0]+"_splits"
 os.mkdir(splits_path)
 
 #split video around silence
-os.system("ffmpeg -hide_banner -i " + input_file + " -to " + timestamps[0] + " -c copy " + splits_path + "/000000" + os.path.splitext(input_file)[1])
+os.system("ffmpeg -hide_banner -i " + input_file + " -to " + timestamps[0] + " -vf setpts=PTS-STARTPTS -strict -2 " + splits_path + "/000000" + os.path.splitext(input_file)[1])
 
 for i in range(1, len(timestamps)-3, 2):
-    os.system("ffmpeg -hide_banner -i " + input_file + " -ss " + timestamps[i] + " -to " + timestamps[i+1] + " -c copy " + splits_path + "/" + str(int((i+1)/2)).zfill(6) + os.path.splitext(input_file)[1])
+    os.system("ffmpeg -hide_banner -i " + input_file + " -ss " + timestamps[i] + " -to " + timestamps[i+1] + " -vf setpts=PTS-STARTPTS -strict -2 " + splits_path + "/" + str(int((i+1)/2)).zfill(6) + os.path.splitext(input_file)[1])
 
-os.system("ffmpeg -hide_banner -i " + input_file + " -ss " + timestamps[len(timestamps)-2] + " -c copy " + splits_path + "/" + str(int(len(timestamps)/2)+1).zfill(6) + os.path.splitext(input_file)[1])
+os.system("ffmpeg -hide_banner -i " + input_file + " -ss " + timestamps[len(timestamps)-2] + " -vf setpts=PTS-STARTPTS -strict -2 " + splits_path + "/" + str(int(len(timestamps)/2)+1).zfill(6) + os.path.splitext(input_file)[1])
 
 #concat all splits
 with open("tmp.txt", 'a+') as f:
