@@ -1,6 +1,8 @@
 # video_silence_remover
 remove silent parts of a video
 
-not done yet
-right now I have it able to get a list of start and end timestamps for silence in the input video
-I'd like to find a way to cut the video without re-encoding because re-encoding is slow and resource intensive
+python splitsilence.py <input_file_path> <output_file_path> <silence_threshold_db (default -30)> <min_silence_length_seconds (default 0.5)>
+
+not done yet but it does work I think
+
+I need to add deletion of temporary files
