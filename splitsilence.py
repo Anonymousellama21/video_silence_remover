@@ -1,5 +1,5 @@
 #usage:
-#python splitsilence.py <input_file_path> <output_file_path> <silence_threshold_db> <min_silence_length_seconds>
+#python splitsilence.py <input_file_path> <output_file_path> <silence_threshold_db (default -30)> <min_silence_length_seconds (default 0.5)>
 
 import time
 import os
@@ -8,23 +8,35 @@ import subprocess
 
 input_file = sys.argv[1]
 
+if len(sys.argv) < 4:
+    threshold = -30
+else:
+    threshold = sys.argv[3]
+
+if len(sys.argv) < 5:
+    min_duration = 0.5
+else:
+    min_duration = sys.argv[4]
+
+
 #get timestamps for silent parts of input video
-timestamps = subprocess.check_output("ffmpeg -hide_banner -i " + input_file + " -vn -af \"silencedetect=n=-30dB:d=0.5\" -f null - 2>&1 | \
-                                     awk \'/silence_end/ {print $5-$8,$5}\' | grep \"[0-9] [0-9]\" | sed -e \"s/ /\\n/g\"",
+timestamps = subprocess.check_output("ffmpeg -hide_banner -i " + input_file + " -vn -af \"silencedetect=n=" + threshold + "dB:d=" + min_duration + "\" -f null - 2>&1 | \
+                                     awk \'/silence_end/ {print $5-$8,$8}\' | grep \"[0-9] [0-9]\" | sed -e \"s/ /\\n/g\"",
                                      shell=True)
 
-timestamps = timestamps.split('\n')
+timestamps = timestamps.split('\n')[:-1]
+print(timestamps)
 
 splits_path = os.path.splitext(input_file)[0]+"_splits"
 os.mkdir(splits_path)
 
 #split video around silence
-os.system("ffmpeg -hide_banner -i " + input_file + " -to " + timestamps[0] + " -vf setpts=PTS-STARTPTS -strict -2 " + splits_path + "/000000" + os.path.splitext(input_file)[1])
+os.system("ffmpeg -hide_banner -i " + input_file + " -to " + timestamps[0] + " -c copy " + splits_path + "/000000" + os.path.splitext(input_file)[1])
 
-for i in range(1, len(timestamps)-3, 2):
-    os.system("ffmpeg -hide_banner -i " + input_file + " -ss " + timestamps[i] + " -to " + timestamps[i+1] + " -vf setpts=PTS-STARTPTS -strict -2 " + splits_path + "/" + str(int((i+1)/2)).zfill(6) + os.path.splitext(input_file)[1])
+for i in range(1, len(timestamps)-2, 2):
+    os.system("ffmpeg -hide_banner -ss " + str(float(timestamps[i-1])+float(timestamps[i])) + " -i " + input_file + " -to " + timestamps[i] + " -c copy " + splits_path + "/" + str(int((i+1)/2)).zfill(6) + os.path.splitext(input_file)[1])
 
-os.system("ffmpeg -hide_banner -i " + input_file + " -ss " + timestamps[len(timestamps)-2] + " -vf setpts=PTS-STARTPTS -strict -2 " + splits_path + "/" + str(int(len(timestamps)/2)+1).zfill(6) + os.path.splitext(input_file)[1])
+os.system("ffmpeg -hide_banner -ss " + str(float(timestamps[-2])+float(timestamps[-1])) + " -i " + input_file + " -c copy " + splits_path + "/" + str(int(len(timestamps)/2)+1).zfill(6) + os.path.splitext(input_file)[1])
 
 #concat all splits
 with open("tmp.txt", 'a+') as f:
