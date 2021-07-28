@@ -24,7 +24,7 @@ timestamps = subprocess.check_output("ffmpeg -i " + input_file + " -vn -af \"sil
                                      shell=True)
 #loudnorm=I=-5:LRA=11:TP=-1.5,
 
-timestamps = timestamps.encode().split('\n')[:-1]
+timestamps = timestamps.decode().split('\n')[:-1]
 print(timestamps)
 
 splits_path = os.path.splitext(input_file)[0]+"_splits"
