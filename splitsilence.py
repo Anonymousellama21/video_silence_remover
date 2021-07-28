@@ -18,13 +18,13 @@ if len(sys.argv) < 5:
 else:
     min_duration = sys.argv[4]
 
-
 #get timestamps for silent parts of input video
-timestamps = subprocess.check_output("ffmpeg -hide_banner -i " + input_file + " -vn -af \"silencedetect=n=" + threshold + "dB:d=" + min_duration + "\" -f null - 2>&1 | \
-                                     awk \'/silence_end/ {print $5-$8,$8}\' | grep \"[0-9] [0-9]\" | sed -e \"s/ /\\n/g\"",
+timestamps = subprocess.check_output("ffmpeg -i " + input_file + " -vn -af \"silencedetect=n=" + threshold + "dB:d=" + min_duration + "\" -f null - 2>&1 | \
+                                     awk \'/silence_end/ {print $5-$8,$8}\' | grep \"^[^-][0-9]\" | sed -e \"s/ /\\n/g\"",
                                      shell=True)
+#loudnorm=I=-5:LRA=11:TP=-1.5,
 
-timestamps = timestamps.split('\n')[:-1]
+timestamps = timestamps.encode().split('\n')[:-1]
 print(timestamps)
 
 splits_path = os.path.splitext(input_file)[0]+"_splits"
